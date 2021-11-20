@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: build-adservice-
+spec:
+  entrypoint: checkout-and-build
+  volumes:
+    - name: gcr-credentials
+      secret:
+        secretName: gcr-registry-access
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+  templates:
+    - name: checkout-and-build
+      steps:
+        - - name: checkout-build
+            template: build-adservice
+            arguments:
+              parameters:
+                - name: git-repo
+                  value: https://github.com/coitio/coit-home-commerce.git
+                - name: git-revision
+                  value: develop
+    - name: build-adservice
+      inputs:
+        parameters:
+          - name: git-repo
+          - name: git-revision
+        artifacts:
+          - name: source-code
+            path: /source/code
+            git:
+              repo: "{{inputs.parameters.git-repo}}"
+              revision: "{{inputs.parameters.git-revision}}"
+      container:
+        image: gcr.io/kaniko-project/executor:latest
+        args: 
+          - "--context=/source/code/src/adservice"
+          - "--dockerfile=/source/code/src/adservice/Dockerfile"
+          - "--destination=gcr.io/rising-area-331809/adservice:3.2.1"
+        volumeMounts:
+          - name: gcr-credentials
+            mountPath: "/kaniko/.docker/"

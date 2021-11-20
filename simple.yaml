@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow                  # new type of k8s spec
+metadata:
+  generateName: hello-world-    # name of the workflow spec
+spec:
+  entrypoint: whalesay-template          # invoke the whalesay template
+  templates:
+  - name: whalesay-template              # name of the template
+    container:
+      image: alpine:latest
+      command: [ls]
+      args: ["/"]
+  - name: hello-template              # name of the template
+    container:
+      image: alpine:latest
+      command: [echo]
+      args: ["hello world"]
+  - name: hello1-template              # name of the template
+    container:
+      image: alpine:latest
+      command: [echo]
+      args: ["hello world1"]
