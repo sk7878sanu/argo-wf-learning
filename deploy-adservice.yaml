@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: deploy-adservice-
+spec:
+  entrypoint: deploy-adservice
+  templates:
+    - name: deploy-adservice
+      steps:
+        - - name: kubectl-deploy
+            template: kubectl-apply
+        - - name: change-image
+            template: kubectl-set-image
+    - name: kubectl-apply
+      inputs:
+        artifacts:
+          - name: manifests-source
+            path: /manifests
+            git:
+              repo: https://github.com/Coit-IO/coit-home-commerce.git
+              revision: "develop"
+      container:
+        image: bitnami/kubectl:1.20.13
+        args: 
+          - "apply"
+          - "-f"
+          - "/manifests/kubernetes-manifests/adservice.yaml"
+    - name: kubectl-set-image
+      container:
+        image: bitnami/kubectl:1.20.13
+        args:
+          - "set"
+          - "image"
+          - "deployment/adservice"
+          - "server=gcr.io/rising-area-331809/adservice"
