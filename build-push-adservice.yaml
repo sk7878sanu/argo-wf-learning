@@ -19,7 +19,7 @@ spec:
             arguments:
               parameters:
                 - name: git-repo
-                  value: https://github.com/coitio/coit-home-commerce.git
+                  value: https://github.com/Coit-IO/coit-home-commerce.git
                 - name: git-revision
                   value: develop
     - name: build-adservice
