@@ -1,0 +1,67 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: git-clone-
+spec:
+  # invoke the whalesay template with
+  # "hello world" as the argument
+  # to the message parameter
+  entrypoint: ci-pipeline
+  arguments:
+    parameters:
+    - name: git_url
+      value: https://github.com/sk7878sanu/coit-simple-microservice.git
+    - name: maven_command 
+      value: install
+    - name: yaml_file_name
+      value: resource-manifests/coit-frontend-deployment.yaml
+
+  templates:
+  - name: checkout-the-code
+    inputs:
+      parameters:
+      - name: git_url      # parameter declaration
+    container:
+      # run cowsay with that message input parameter as args
+      image: alpine/git
+      command: ["git" ,  "clone"]
+      args: ["{{inputs.parameters.git_url}}"]
+  - name: build-with-maven
+    inputs:
+      parameters:
+      - name: maven_command      # parameter declaration
+    container:
+      # run cowsay with that message input parameter as args
+      image: maven
+      command: ["mvn"]
+      args: ["{{inputs.parameters.maven_command}}"]
+  - name: deploy-with-kubectl
+    inputs:
+      parameters:
+      - name: yaml_file_name     # parameter declaration
+    container:
+      # run cowsay with that message input parameter as args
+      image: maven
+      command: ["kubectl" , "apply"]
+      args: ["{{inputs.parameters.yaml_file_name}}"]   
+
+  - name: ci-pipeline
+    steps: 
+    - - name: git-clone  
+        template: checkout-the-code
+        arguments:
+         parameters:
+         - name: git_url
+           value: https://github.com/sk7878sanu/coit-simple-microservice.git
+    - - name: maven-install
+        template: build-with-maven
+        arguments:
+         parameters:
+         - name: maven_command
+           value: install
+    - - name: deploy-to-kubernetes
+        template: deploy-with-kubectl
+        arguments:
+         parameters:
+         - name: yaml_file_name
+           value: resource-manifests/coit-frontend-deployment.yaml
